@@ -1,25 +1,51 @@
-.App::before{
-  content: '';
-  display: block;
-  height: 50px;
-  width: 100%;
-  background-color: #007FB5;
+.App::before {
+	content: '';
+	display: block;
+	height: 50px;
+	width: 100%;
+	background-color: #007fb5;
 }
-.main{
-  display: flex;
+.main {
+	display: flex;
 }
-.search{
-  height: calc(100vh - 50px);
-  border-right: solid 2px #979797;
-  width: 50vw;
+.search {
+	height: calc(100vh - 50px);
+	border-right: solid 2px #979797;
+	width: 50vw;
+	padding: 3%;
 }
-.graph{
-  background-color: red;
-  width: 50vw;
-  height: 200px;
+.graph {
+	background-color: red;
+	width: 50vw;
+	height: 200px;
 }
-.search-result{
-  display: flex;
-  width: 300px;
-  justify-content: space-between;
+
+.search-result {
+	font-weight: bold;
+  margin-top: 20px;
+}
+.result-symbol{
+  font-size: 20px;
+  padding: 3px;
+}
+.result-figures {
+	display: flex;
+	width: 60%;
+	justify-content: space-between;
+}
+.result-figures .company {
+	font-size: 30px;
+}
+.result-figures .currPrice {
+	font-size: 28px;
+	color: #006b00;
+  font-weight: 600;
+}
+.quoteLabel {
+	display: inline-block;
+	width: 150px;
+}
+.quoteNum {
+	display: inline-block;
+	color: #006b00;
 }
