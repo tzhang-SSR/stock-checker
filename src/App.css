@@ -14,9 +14,42 @@
 	width: 50vw;
 	padding: 3%;
 }
+
 .graph {
 	width: 50vw;
-	height: 200px;
+}
+.search-form {
+	display: flex;
+	margin-top: 10px;
+}
+
+.search-form input{
+	border: solid 1px;
+}
+
+.search-form:active input,
+.search-form:focus input {
+	outline: none !important;
+	border-color: #007fb5;
+}
+.search-form:active input[type='submit'],
+.search-form:focus input[type='submit'] {
+	color: #007fb5;
+}
+
+.form-input {
+	width: 60%;
+	max-width: 400px;
+	margin-right: 20px;
+	outline: none;
+	padding: 10px;
+}
+
+.form-btn {
+	padding: 5px;
+	width: 50px;
+	font-size: 20px;
+	font-weight: bold;
 }
 
 .search-result {
@@ -34,7 +67,7 @@
 }
 .result-figures .company {
 	font-size: 30px;
-  padding-right: 1px;
+	padding-right: 1px;
 }
 .result-figures .currPrice {
 	font-size: 28px;
@@ -51,4 +84,36 @@
 .quoteNum {
 	display: inline-block;
 	color: #006b00;
+}
+.graph div{
+	margin: 0 auto;
+	max-width: 100%;
+}
+
+@media only screen and (max-width: 1000px) {
+	.main{
+		flex-direction: column;
+	}
+	.search, .graph{
+		width: auto;
+	}
+	.search{
+		border: none;
+		height: auto;
+	}
+	.result-figures{
+		width: 100%;
+	}
+}
+
+@media only screen and (max-width: 600px) {
+	.search{
+		padding: 30px;
+	}
+	.result-figures {
+		flex-direction: column;
+	}
+	.quoteData {
+		margin-top: 20px;
+	}
 }

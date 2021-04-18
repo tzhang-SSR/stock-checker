@@ -39,16 +39,34 @@ class App extends Component {
     }
   }
 
-  onSearch = () => {
-    const param = `?q=${this.state.query}&token=${process.env.REACT_APP_API_KEY}`
-    let response = getSymbol(param)
-    let resolved = response.then(res => this.checkResult(res.result))
-    let error = resolved.catch(e => {
-      if (e) {
-        console.log(e)
-        this.setState({ isInvalid: true, errorText: "E" })
-      }
-    })
+  validateInput = () => {
+    let symbols = localStorage.getItem('symbols').split(',')
+    if (symbols.includes(this.state.query)) {
+      return true
+    }
+    else {
+      this.setState({
+        isInvalid: true,
+        errorText: 'Not a valid Ticker Symbol. Please try another word',
+        query: ''
+      })
+      return false
+    }
+  }
+
+  onSearch = (e) => {
+    e.preventDefault()
+    if (this.validateInput()) {
+      const param = `?q=${this.state.query}&token=${process.env.REACT_APP_API_KEY}`
+      let response = getSymbol(param)
+      let resolved = response.then(res => this.checkResult(res.result))
+      let error = resolved.catch(e => {
+        if (e) {
+          console.log(e)
+          this.setState({ isInvalid: true, errorText: e })
+        }
+      })
+    }
   }
 
   checkResult = (result) => {
@@ -103,7 +121,6 @@ class App extends Component {
       let data = [new Date(res.t[i] * 1000), res.c[i]]
       dataPoints.push(data)
     }
-
     this.setState({ dataPoints })
   }
 
@@ -128,21 +145,24 @@ class App extends Component {
         <div className="main">
           <div className="search">
             <div>Enter Ticker Symbol:</div>
-            <input type="text" placeholder="TICKER"
-              value={query}
-              onChange={e => this.setState({ query: e.target.value, showResult: false })} />
-            <button onClick={this.onSearch}>&#10132;</button>
+            <form className="search-form" onSubmit={this.onSearch}>
+              <input className="form-input" type="text" placeholder="TICKER"
+                value={query}
+                onChange={e => this.setState({ query: e.target.value, showResult: false })} />
+              <input className="form-btn" type="submit" value="&#10132;" />
+            </form>
             {
               isInvalid
                 ? <p>{errorText}</p>
                 : showResult &&
-                  <Result
-                    symbolName={symbolName}
-                    companyName={companyName}
-                    currPrice={currPrice}
-                    quoteData={quoteData} />
+                <Result
+                  symbolName={symbolName}
+                  companyName={companyName}
+                  currPrice={currPrice}
+                  quoteData={quoteData} />
             }
           </div>
+          <hr className="vertical" />
           <div className="graph">
             {dataNotEmpty &&
               <GraphChart dataPoints={dataPoints} />
