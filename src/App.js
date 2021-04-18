@@ -124,6 +124,13 @@ class App extends Component {
     this.setState({ dataPoints })
   }
 
+  handleKeyPress = (e) => {
+    if(e.key === 'Enter'){
+      console.log('enter press here! ')
+      this.onSearch()
+    }
+  }
+
   render() {
     const {
       query, currPrice, companyName, symbolName,
