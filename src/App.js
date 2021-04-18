@@ -1,7 +1,10 @@
 import './App.css';
 import React, { Component } from 'react';
-import { getSymbol, getQuotes } from './utils/api';
-import Result from './components/Result'
+import { getSymbol, getQuotes, getCandles, getUSSymbols } from './utils/api';
+import Result from './components/Result';
+import { Chart } from "react-google-charts";
+import GraphChart from './components/GraphChart';
+
 class App extends Component {
   state = {
     query: '',
@@ -14,7 +17,26 @@ class App extends Component {
     symbolName: '',
     showResult: false,
     isInvalid: false,
-    errorText: ''
+    errorText: '',
+    dataPoints: []
+  }
+
+  componentDidMount() {
+    this.storeSymbols()
+  }
+
+  storeSymbols = () => {
+    if (!localStorage.getItem('symbols')) {
+      const param = `token=${process.env.REACT_APP_API_KEY}`
+      let response = getUSSymbols(param)
+      let resolved = response.then(res => {
+        let symbols = []
+        for (let i of res) {
+          symbols.push(i.symbol)
+        }
+        localStorage.setItem('symbols', symbols)
+      })
+    }
   }
 
   onSearch = () => {
@@ -22,7 +44,7 @@ class App extends Component {
     let response = getSymbol(param)
     let resolved = response.then(res => this.checkResult(res.result))
     let error = resolved.catch(e => {
-      if(e){
+      if (e) {
         console.log(e)
         this.setState({ isInvalid: true, errorText: "E" })
       }
@@ -30,7 +52,6 @@ class App extends Component {
   }
 
   checkResult = (result) => {
-    console.log("result", result)
     // if result.length == 0 then the search word is not valid
     this.setState({ isInvalid: !result.length })
     if (result.length) {
@@ -38,6 +59,7 @@ class App extends Component {
       let symbolName = result[0].symbol
       this.setState({ showResult: true, companyName, symbolName })
       this.getQuoteData(symbolName)
+      this.getGraphData(symbolName)
     }
     else {
       const errorText = 'No result for this search. Please try another word'
@@ -58,18 +80,49 @@ class App extends Component {
     let error = resolved.catch(e => console.log(e))
   }
 
+  getGraphData = (symbol) => {
+    const prevYear = new Date().getFullYear() - 1
+    const currTime = Date.parse(new Date(`12/31/${prevYear}`)) / 1000
+    const prevTime = Date.parse(new Date(`01/01/${prevYear}`)) / 1000
+    const url = 'https://finnhub.io/api/v1/stock/candle?symbol=AAPL&resolution=M&from=1615298999&to=1615302599'
+    const param = `?symbol=${symbol}&resolution=D&from=${prevTime}&to=${currTime}&token=${process.env.REACT_APP_API_KEY}`
+
+    let response = getCandles(param)
+    let resolved = response.then(res => {
+      if (res.s == "ok") {
+        this.drawGraphs(res)
+      }
+    }
+    )
+    let error = resolved.catch(e => console.log(e))
+  }
+
+  drawGraphs = (res) => {
+    let dataPoints = []
+    for (let i = 0; i < res.t.length; i++) {
+      let data = [new Date(res.t[i] * 1000), res.c[i]]
+      dataPoints.push(data)
+    }
+
+    this.setState({ dataPoints })
+  }
+
   render() {
     const {
       query, currPrice, companyName, symbolName,
       todayhigh, todaylow, todayopen, prevclosed,
-      showResult, isInvalid, errorText
-    } = this.state
+      showResult, isInvalid, errorText, dataPoints
+    } = this.state;
+
     const quoteData = [
       { labelName: 'Previous Close: ', labelNum: prevclosed },
       { labelName: 'Todays Open: ', labelNum: todayopen },
       { labelName: 'Todays High: ', labelNum: todayhigh },
       { labelName: 'Todays Low: ', labelNum: todaylow }
-    ]
+    ];
+
+    const dataNotEmpty = dataPoints.length > 0
+
     return (
       <div className="App">
         <div className="main">
@@ -82,14 +135,19 @@ class App extends Component {
             {
               isInvalid
                 ? <p>{errorText}</p>
-                : showResult && <Result
-                  symbolName={symbolName}
-                  companyName={companyName}
-                  currPrice={currPrice}
-                  quoteData={quoteData} />
+                : showResult &&
+                  <Result
+                    symbolName={symbolName}
+                    companyName={companyName}
+                    currPrice={currPrice}
+                    quoteData={quoteData} />
             }
           </div>
-          <div className="graph"></div>
+          <div className="graph">
+            {dataNotEmpty &&
+              <GraphChart dataPoints={dataPoints} />
+            }
+          </div>
         </div>
       </div>
     );

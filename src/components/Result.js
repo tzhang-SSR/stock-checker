@@ -7,7 +7,7 @@ export default function Result({ symbolName, companyName, currPrice, quoteData }
                     <div className="company">{companyName}</div>
                     <div className="currPrice">{currPrice}</div>
                 </div>
-                <div>
+                <div className="quoteData">
                     {/*get realy time quotes with given symbol */}
                     {
                         quoteData.map((data, index) =>
