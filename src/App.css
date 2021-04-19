@@ -17,6 +17,7 @@
 
 .graph {
 	width: 50vw;
+	padding: 10px;
 }
 .search-form {
 	display: flex;
@@ -52,39 +53,6 @@
 	font-weight: bold;
 }
 
-.search-result {
-	font-weight: bold;
-	margin-top: 20px;
-}
-.result-symbol {
-	font-size: 20px;
-	padding: 3px;
-}
-.result-figures {
-	display: flex;
-	width: 80%;
-	justify-content: space-between;
-}
-.result-figures .company {
-	font-size: 30px;
-	padding-right: 1px;
-}
-.result-figures .currPrice {
-	font-size: 28px;
-	color: #006b00;
-	font-weight: 600;
-}
-.quoteData {
-	min-width: 250px;
-}
-.quoteLabel {
-	display: inline-block;
-	width: 150px;
-}
-.quoteNum {
-	display: inline-block;
-	color: #006b00;
-}
 .graph div{
 	margin: 0 auto;
 	max-width: 100%;

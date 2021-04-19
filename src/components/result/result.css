@@ -1,0 +1,50 @@
+.search-result {
+	font-weight: bold;
+	margin-top: 20px;
+}
+.result-symbol {
+	font-size: 20px;
+	padding: 3px;
+}
+.result-figures {
+	display: flex;
+	width: 80%;
+	justify-content: space-between;
+}
+.result-figures .company {
+	font-size: 30px;
+	padding-right: 1px;
+}
+.result-figures .currPrice {
+	font-size: 28px;
+	color: #006b00;
+	font-weight: 600;
+}
+.quoteData {
+	min-width: 250px;
+}
+.quoteLabel {
+	display: inline-block;
+	width: 150px;
+}
+.quoteNum {
+	display: inline-block;
+	color: #006b00;
+}
+
+.result-peers {
+	font-size: 20px;
+	padding: 3px;
+	margin-top: 20px;
+}
+
+.result-peersList > div {
+	display: inline-block;
+	color: #007fb5;
+	margin-right: 20px;
+	cursor: pointer;
+}
+
+.result-peersList > div:hover {
+	text-decoration: underline;
+}

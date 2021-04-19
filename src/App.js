@@ -1,8 +1,7 @@
 import './App.css';
 import React, { Component } from 'react';
-import { getSymbol, getQuotes, getCandles, getUSSymbols } from './utils/api';
-import Result from './components/Result';
-import { Chart } from "react-google-charts";
+import { getSymbol, getQuotes, getCandles, getUSSymbols, getCompanyPeers } from './utils/api';
+import Result from './components/result';
 import GraphChart from './components/GraphChart';
 
 class App extends Component {
@@ -15,10 +14,15 @@ class App extends Component {
     prevclosed: 0,
     companyName: '',
     symbolName: '',
+    peers: [],
     showResult: false,
     isInvalid: false,
     errorText: '',
-    dataPoints: []
+    // graph data states
+    loadingGraph: false,
+    isGraphValid: true,
+    graphError: '',
+    dataPoints: [],
   }
 
   componentDidMount() {
@@ -26,6 +30,7 @@ class App extends Component {
   }
 
   storeSymbols = () => {
+    //store all the valid US ticker symbols
     if (!localStorage.getItem('symbols')) {
       const param = `token=${process.env.REACT_APP_API_KEY}`
       let response = getUSSymbols(param)
@@ -40,7 +45,8 @@ class App extends Component {
   }
 
   validateInput = () => {
-    let symbols = localStorage.getItem('symbols').split(',')
+    // check if the input is in the stored symbols
+    const symbols = localStorage.getItem('symbols').split(',')
     if (symbols.includes(this.state.query)) {
       return true
     }
@@ -56,21 +62,27 @@ class App extends Component {
 
   onSearch = (e) => {
     e.preventDefault()
+    this.getSymbolData(this.state.query)
+  }
+
+  getSymbolData = (symbol) => {
+    if (this.state.query != symbol) { this.setState({ query: symbol }) }
     if (this.validateInput()) {
-      const param = `?q=${this.state.query}&token=${process.env.REACT_APP_API_KEY}`
+      const param = `?q=${symbol}&token=${process.env.REACT_APP_API_KEY}`
       let response = getSymbol(param)
-      let resolved = response.then(res => this.checkResult(res.result))
+      let resolved = response.then(res => this.handleSymbol(res.result))
       let error = resolved.catch(e => {
         if (e) {
           console.log(e)
-          this.setState({ isInvalid: true, errorText: e })
+          this.setState({ isInvalid: true, errorText: "Error. Failed to fetch" })
         }
       })
     }
   }
 
-  checkResult = (result) => {
-    // if result.length == 0 then the search word is not valid
+  handleSymbol = (result) => {
+    // if the return result.length == 0
+    // then the search word is not valid
     this.setState({ isInvalid: !result.length })
     if (result.length) {
       let companyName = result[0].description
@@ -78,6 +90,7 @@ class App extends Component {
       this.setState({ showResult: true, companyName, symbolName })
       this.getQuoteData(symbolName)
       this.getGraphData(symbolName)
+      this.getSimiliarCompanies(symbolName)
     }
     else {
       const errorText = 'No result for this search. Please try another word'
@@ -102,17 +115,35 @@ class App extends Component {
     const prevYear = new Date().getFullYear() - 1
     const currTime = Date.parse(new Date(`12/31/${prevYear}`)) / 1000
     const prevTime = Date.parse(new Date(`01/01/${prevYear}`)) / 1000
-    const url = 'https://finnhub.io/api/v1/stock/candle?symbol=AAPL&resolution=M&from=1615298999&to=1615302599'
     const param = `?symbol=${symbol}&resolution=D&from=${prevTime}&to=${currTime}&token=${process.env.REACT_APP_API_KEY}`
-
+    this.setState({ loadingGraph: true })
     let response = getCandles(param)
     let resolved = response.then(res => {
       if (res.s == "ok") {
+        this.setState({ loadingGraph: false })
         this.drawGraphs(res)
       }
-    }
-    )
-    let error = resolved.catch(e => console.log(e))
+    })
+    let error = resolved.catch(e => {
+      console.log(e)
+      this.setState({
+        isGraphValid: false,
+        loadingGraph: false,
+        graphError: "Error: Failed to Fetch"
+      })
+    })
+
+  }
+
+  getSimiliarCompanies = (symbol) => {
+    const param = `?symbol=${symbol}&token=${process.env.REACT_APP_API_KEY}`
+    let response = getCompanyPeers(param)
+    let resolved = response.then(res => {
+
+      // select three peer comapnies at most
+      let peers = res.length > 4 ? res.slice(1, 4) : res
+      this.setState({ peers })
+    })
   }
 
   drawGraphs = (res) => {
@@ -125,17 +156,17 @@ class App extends Component {
   }
 
   handleKeyPress = (e) => {
-    if(e.key === 'Enter'){
-      console.log('enter press here! ')
+    if (e.key === 'Enter') {
       this.onSearch()
     }
   }
 
   render() {
     const {
-      query, currPrice, companyName, symbolName,
+      query, currPrice, companyName, symbolName, peers,
       todayhigh, todaylow, todayopen, prevclosed,
-      showResult, isInvalid, errorText, dataPoints
+      isInvalid, isGraphValid, errorText, graphError, loadingGraph,
+      showResult, dataPoints
     } = this.state;
 
     const quoteData = [
@@ -146,7 +177,6 @@ class App extends Component {
     ];
 
     const dataNotEmpty = dataPoints.length > 0
-
     return (
       <div className="App">
         <div className="main">
@@ -166,13 +196,19 @@ class App extends Component {
                   symbolName={symbolName}
                   companyName={companyName}
                   currPrice={currPrice}
-                  quoteData={quoteData} />
+                  quoteData={quoteData}
+                  peers={peers}
+                  getSymbolData={this.getSymbolData} />
             }
           </div>
           <hr className="vertical" />
           <div className="graph">
-            {dataNotEmpty &&
-              <GraphChart dataPoints={dataPoints} />
+            {
+              loadingGraph
+                ? <p>Loading graph data...</p>
+                : isGraphValid
+                  ? dataNotEmpty && <GraphChart dataPoints={dataPoints} />
+                  : <p>{graphError}</p>
             }
           </div>
         </div>

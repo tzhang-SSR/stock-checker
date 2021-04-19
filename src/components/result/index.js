@@ -1,4 +1,6 @@
-export default function Result({ symbolName, companyName, currPrice, quoteData }) {
+import './result.css';
+
+export default function Result({ symbolName, companyName, currPrice, quoteData, peers, getSymbolData }) {
     return (
         <div className="search-result">
             <div className="result-symbol">{symbolName}</div>
@@ -18,6 +20,12 @@ export default function Result({ symbolName, companyName, currPrice, quoteData }
                     }
                 </div>
             </div>
+            <div className="result-peers">Similiar Companies</div>
+            <div className="result-peersList">{
+                peers.map((peer, index) => 
+                    <div key={index} onClick={() => getSymbolData(peer)}>{peer}</div>
+                )
+            }</div>
         </div>
     )
 }
