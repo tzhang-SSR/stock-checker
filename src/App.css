@@ -69,6 +69,14 @@
 	.search{
 		border: none;
 		height: auto;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+	}
+	.search > div,
+	.search > form{
+		min-width: 80%;
 	}
 	.result-figures{
 		width: 100%;

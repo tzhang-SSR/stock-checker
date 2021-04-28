@@ -23,6 +23,7 @@ class App extends Component {
     isGraphValid: true,
     graphError: '',
     dataPoints: [],
+    histories: []
   }
 
   componentDidMount() {
@@ -68,9 +69,12 @@ class App extends Component {
   getSymbolData = (symbol) => {
     if (this.state.query != symbol) { this.setState({ query: symbol }) }
     if (this.validateInput()) {
+      let arr = this.state.histories
+      arr.push(symbol)
+      this.setState({histories: arr})
       const param = `?q=${symbol}&token=${process.env.REACT_APP_API_KEY}`
       let response = getSymbol(param)
-      let resolved = response.then(res => this.handleSymbol(res.result))
+      let resolved = response.then(res => this.handleSymbol(res.result, symbol))
       let error = resolved.catch(e => {
         if (e) {
           console.log(e)
@@ -80,13 +84,15 @@ class App extends Component {
     }
   }
 
-  handleSymbol = (result) => {
+  handleSymbol = (result, symbolInput) => {
     // if the return result.length == 0
     // then the search word is not valid
     this.setState({ isInvalid: !result.length })
+    let rightOne = result.find(e => e.symbol == symbolInput)
+
     if (result.length) {
-      let companyName = result[0].description
-      let symbolName = result[0].symbol
+      let companyName = rightOne.description
+      let symbolName = rightOne.symbol
       this.setState({ showResult: true, companyName, symbolName })
       this.getQuoteData(symbolName)
       this.getGraphData(symbolName)
@@ -139,10 +145,9 @@ class App extends Component {
     const param = `?symbol=${symbol}&token=${process.env.REACT_APP_API_KEY}`
     let response = getCompanyPeers(param)
     let resolved = response.then(res => {
-
+      const symbols = localStorage.getItem('symbols').split(',')
       // select three peer comapnies at most
-      let peers = res.length > 4 ? res.slice(1, 4) : res
-      this.setState({ peers })
+      this.setState({ peers: res.filter(e => symbols.includes(e)).slice(1, 4) })
     })
   }
 
@@ -161,13 +166,29 @@ class App extends Component {
     }
   }
 
+  sortArrayByCount = (arr) => {
+    let newset = new Set(arr)
+    // record the each value along with their frequency
+    let frequency = {}
+    for(const i of newset){
+      let currArr = arr.filter(e => e == i)
+      frequency[i] = currArr.length
+    }
+    // newArr only have no repeated value
+    let newArr = Array.from(newset)
+    // sort item of the array based on their appearnce frequency
+    return newArr.sort((a, b) => frequency[b] - frequency[a])
+  }
+
   render() {
     const {
       query, currPrice, companyName, symbolName, peers,
       todayhigh, todaylow, todayopen, prevclosed,
       isInvalid, isGraphValid, errorText, graphError, loadingGraph,
-      showResult, dataPoints
+      showResult, dataPoints, histories
     } = this.state;
+
+    const histroies_top5 = this.sortArrayByCount(histories).slice(0, 5)
 
     const quoteData = [
       { labelName: 'Previous Close: ', labelNum: prevclosed },
@@ -198,6 +219,7 @@ class App extends Component {
                   currPrice={currPrice}
                   quoteData={quoteData}
                   peers={peers}
+                  histories = {histroies_top5}
                   getSymbolData={this.getSymbolData} />
             }
           </div>
